@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Finance Budget Planner</title>
+    <style>
+        :root{
+            --bg:#f6f8fb;
+            --card:#ffffff;
+            --primary:#334155;
+            --accent:#0ea5a4;
+            --danger:#ef4444;
+            --muted:#6b7280;
+            --shadow: 0 6px 18px rgba(16,24,40,0.06);
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%;margin:0;background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 100%);color:var(--primary)}
+        .container{max-width:1000px;margin:28px auto;padding:20px}
+
+        header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+        .brand{display:flex;gap:12px;align-items:center}
+        .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+        h1{font-size:18px;margin:0}
+        .sub{color:var(--muted);font-size:13px}
+
+        .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+        .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+
+        /* Summary */
+        .summary{display:flex;gap:12px;align-items:center;justify-content:space-between}
+        .balance{font-size:20px;font-weight:700}
+        .totals{display:flex;gap:8px}
+        .pill{background:#f8fafc;padding:8px 12px;border-radius:999px;font-size:14px;color:var(--muted);display:flex;gap:10px;align-items:center}
+        .pill strong{color:var(--primary);font-weight:700}
+
+        /* Form */
+        form{display:grid;gap:10px}
+        label{font-size:13px;color:var(--muted)}
+        input[type="text"], input[type="number"], select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ef;background:transparent}
+        .row{display:flex;gap:8px}
+        .row > *{flex:1}
+        button{background:var(--accent);color:white;padding:10px 12px;border-radius:8px;border:0;cursor:pointer}
+        .btn-danger{background:var(--danger)}
+
+        /* Transactions */
+        .tx-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+        .tx{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid #f1f5f9}
+        .tx .meta{display:flex;gap:10px;align-items:center}
+        .amt{font-weight:700}
+        .amt.income{color:green}
+        .amt.expense{color:var(--danger)}
+
+        footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+
+        /* Responsive */
+        @media (max-width:880px){
+            .grid{grid-template-columns:1fr;}
+            .container{padding:12px;margin:12px}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <div class="logo">FB</div>
+                <div>
+                    <h1>Finance Budget Planner</h1>
+                    <div class="sub">Track income & expenses — data stored in your browser</div>
+                </div>
+            </div>
+            <div class="sub">Simple · Responsive · Private</div>
+        </header>
+
+        <main class="grid">
+            <section>
+                <div class="card">
+                    <div class="summary">
+                        <div>
+                            <div class="sub">Current Balance</div>
+                            <div class="balance" id="balance">$0.00</div>
+                        </div>
+                        <div class="totals">
+                            <div class="pill"><span class="sub">Income</span><strong id="income">$0.00</strong></div>
+                            <div class="pill"><span class="sub">Expenses</span><strong id="expenses">$0.00</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="height:12px"></div>
+
+                <div class="card">
+                    <h3 style="margin:0 0 10px 0">Add Transaction</h3>
+                    <form id="tx-form">
+                        <div>
+                            <label for="desc">Description</label>
+                            <input id="desc" type="text" placeholder="e.g., Salary, Groceries" required />
+                        </div>
+                        <div class="row">
+                            <div>
+                                <label for="amount">Amount</label>
+                                <input id="amount" type="number" step="0.01" placeholder="0.00" required />
+                            </div>
+                            <div>
+                                <label for="type">Type</label>
+                                <select id="type">
+                                    <option value="income">Income</option>
+                                    <option value="expense">Expense</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="category">Category (optional)</label>
+                            <input id="category" type="text" placeholder="e.g., Food, Rent, Salary" />
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <button type="submit">Add</button>
+                            <button type="button" id="clear" class="btn-danger">Clear All</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div style="height:12px"></div>
+
+                <div class="card">
+                    <h3 style="margin:0 0 10px 0">Transactions</h3>
+                    <ul id="tx-list" class="tx-list"></ul>
+                    <footer>Transactions are stored locally in your browser.</footer>
+                </div>
+            </section>
+
+            <aside>
+                <div class="card">
+                    <h3 style="margin-top:0">Quick Tips</h3>
+                    <ul style="margin:8px 0 0 18px;color:var(--muted)">
+                        <li>Use positive amounts for income and expenses (type sets sign).</li>
+                        <li>Clear data uses local storage remove — it's permanent.</li>
+                        <li>Works offline in this browser.</li>
+                    </ul>
+                </div>
+                <div style="height:12px"></div>
+                <div class="card">
+                    <h3 style="margin-top:0">Summary</h3>
+                    <div style="color:var(--muted);font-size:14px;line-height:1.6">
+                        <div><strong id="count">0</strong> transactions</div>
+                        <div style="margin-top:8px">Keep categories consistent for better tracking.</div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <script>
+        // Simple Finance Tracker — single-file implementation
+        (function(){
+            const STORAGE_KEY = 'fbp_transactions_v1';
+
+            const $ = id => document.getElementById(id);
+            const form = $('tx-form');
+            const desc = $('desc');
+            const amount = $('amount');
+            const type = $('type');
+            const category = $('category');
+            const txList = $('tx-list');
+            const balanceEl = $('balance');
+            const incomeEl = $('income');
+            const expensesEl = $('expenses');
+            const countEl = $('count');
+            const clearBtn = $('clear');
+
+            let transactions = [];
+
+            function load(){
+                try{
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if(raw) transactions = JSON.parse(raw);
+                }catch(e){ transactions = [] }
+                render();
+            }
+
+            function save(){
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+            }
+
+            function addTransaction(t){
+                transactions.unshift(t);
+                save();
+                render();
+            }
+
+            function removeTransaction(id){
+                transactions = transactions.filter(t => t.id !== id);
+                save();
+                render();
+            }
+
+            function formatCurrency(n){
+                const sign = n < 0 ? '-' : '';
+                const abs = Math.abs(n);
+                return sign + '$' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            }
+
+            function render(){
+                txList.innerHTML = '';
+                let income = 0, expenses = 0;
+                transactions.forEach(tx => {
+                    const li = document.createElement('li');
+                    li.className = 'tx';
+                    const meta = document.createElement('div'); meta.className='meta';
+                    const left = document.createElement('div');
+                    left.innerHTML = `<div style="font-weight:600">${escapeHtml(tx.desc)}</div><div style="font-size:13px;color:var(--muted)">${escapeHtml(tx.category||'—')}</div>`;
+                    meta.appendChild(left);
+
+                    const right = document.createElement('div');
+                    const amt = document.createElement('div');
+                    amt.className = 'amt ' + (tx.type==='income'?'income':'expense');
+                    const signed = tx.type === 'expense' ? -Math.abs(tx.amount) : Math.abs(tx.amount);
+                    amt.textContent = formatCurrency(signed);
+                    const del = document.createElement('button');
+                    del.textContent = 'Delete'; del.style.marginLeft='12px'; del.className='btn-danger';
+                    del.onclick = () => { if(confirm('Delete this transaction?')) removeTransaction(tx.id) };
+
+                    right.appendChild(amt);
+                    right.appendChild(del);
+
+                    li.appendChild(meta);
+                    li.appendChild(right);
+                    txList.appendChild(li);
+
+                    if(tx.type === 'income') income += Math.abs(tx.amount);
+                    else expenses += Math.abs(tx.amount);
+                });
+
+                const balance = income - expenses;
+                balanceEl.textContent = formatCurrency(balance);
+                incomeEl.textContent = formatCurrency(income);
+                expensesEl.textContent = formatCurrency(expenses);
+                countEl.textContent = transactions.length;
+            }
+
+            function escapeHtml(s){
+                return String(s).replace(/[&<>"']/g, function(c){
+                    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c];
+                });
+            }
+
+            form.addEventListener('submit', e=>{
+                e.preventDefault();
+                const d = desc.value.trim();
+                const a = parseFloat(amount.value);
+                const t = type.value;
+                const c = category.value.trim();
+                if(!d || Number.isNaN(a)){
+                    alert('Please enter a description and a valid amount.');
+                    return;
+                }
+                addTransaction({id: Date.now().toString(36)+Math.random().toString(36).slice(2,7), desc:d, amount: Math.abs(a), type:t, category:c});
+                form.reset();
+                desc.focus();
+            });
+
+            clearBtn.addEventListener('click', ()=>{
+                if(confirm('Clear all transactions? This cannot be undone.')){
+                    transactions = [];
+                    save();
+                    render();
+                }
+            });
+
+            // Initialize with sample if empty (optional) — keep commented out or remove
+            // if(!localStorage.getItem(STORAGE_KEY)){
+            //   transactions = [
+            //     {id:'s1',desc:'Salary',amount:2500,type:'income',category:'Salary'},
+            //     {id:'s2',desc:'Groceries',amount:120.5,type:'expense',category:'Food'}
+            //   ]; save();
+            // }
+
+            load();
+        })();
+    </script>
+</body>
+</html>
